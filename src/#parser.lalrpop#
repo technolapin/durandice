@@ -28,7 +28,7 @@ Expr2: i64 =
 {
     Expr1,
     <a: Expr2> "*" <b: Expr1> => a*b,
-//    <a: Expr2> "/" <b: Expr1> => a*b,
+    <a: Expr2> "/" <b: Expr1> => a*b,
 }
 
 Expr3: i64 =
