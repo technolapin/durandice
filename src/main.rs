@@ -12,7 +12,7 @@ use std::convert::From;
 #[macro_use] extern crate lalrpop_util;
 lalrpop_mod!(pub parser);
 
-
+use serenity::model::event::MessageUpdateEvent;
 
 /*
 struct LastCommand;
@@ -50,96 +50,119 @@ impl Handler
     }
 }
 
-impl EventHandler for Handler
+fn process_message(ctx: Context, msg: Message)
 {
-    fn message(&self, ctx: Context, msg: Message) {
-        if msg.content.starts_with("?")
-	{
-            let realname = String::from(&msg.author.name);
-            let username = if let Some(member) = msg.member(&ctx.cache)
+    if msg.content.starts_with("?")
+    {
+        let realname = String::from(&msg.author.name);
+        let username = if let Some(member) = msg.member(&ctx.cache)
+        {
+            if let Some(nick) = member.nick
             {
-                if let Some(nick) = member.nick
-                {
-                    nick.clone()
-                }
-                else
-                {
-                    msg.author.name
-                }
+                nick.clone()
             }
             else
             {
                 msg.author.name
-            };
-            
-            let conn = Connection::open("database.db").unwrap();
+            }
+        }
+        else
+        {
+            msg.author.name
+        };
+        
+        let conn = Connection::open("database.db").unwrap();
 
-	    let mut text = String::from(&msg.content[1..].to_ascii_lowercase());
+	let mut text = String::from(&msg.content[1..].to_ascii_lowercase());
 
 
-            println!(r#"ENTRY: {} entered "{}""#, realname, text);
+        println!(r#"ENTRY: {} entered "{}""#, realname, text);
 
-            let out = parse(text, username, realname, &conn);
+        let out = parse(text, username, realname, &conn);
 
-            match out
+        match out
+        {
+            Err(err) =>
             {
-                Err(err) =>
+                let content = format!("Error: {:?}", err);
+                if let Err(why) = msg.channel_id.say(&ctx.http, &content)
+	        {
+                    println!("Error sending error message {:?} ({:?})", content, why);
+                }
+
+            },
+            Ok(answer) => match answer
+            {
+                BotOutput::Nothing =>
                 {
-                    let content = format!("Error: {:?}", err);
+                    println!("Bot output: No output");
+                },
+                BotOutput::Text(content) =>
+                {
                     if let Err(why) = msg.channel_id.say(&ctx.http, &content)
 	            {
-                        println!("Error sending error message {:?} ({:?})", content, why);
+                        println!("Error sending message: {:?}", why);
                     }
-
+                    else
+                    {
+                        println!(r#"Bot output: Text "{}""#, content);
+                    }
                 },
-                Ok(answer) => match answer
+                BotOutput::Image{url, maybe_text} =>
                 {
-                    BotOutput::Nothing =>
+                    if let Err(why) = msg.channel_id
+                        .send_files(&ctx.http,
+                                    vec![url.as_str()],
+                                    |m| {  if let Some(text) = maybe_text.clone()
+                                           {m.content(&text)}
+                                           else
+                                           {m.content("")} })
+	            {
+                        println!("Error sending message: {:?}", why);
+                    }
+                    else
                     {
-                        println!("Bot output: No output");
-                    },
-                    BotOutput::Text(content) =>
-                    {
-                        if let Err(why) = msg.channel_id.say(&ctx.http, &content)
-	                {
-                            println!("Error sending message: {:?}", why);
-                        }
-                        else
-                        {
-                            println!(r#"Bot output: Text "{}""#, content);
-                        }
-                    },
-                    BotOutput::Image{url, maybe_text} =>
-                    {
-                        if let Err(why) = msg.channel_id
-                            .send_files(&ctx.http,
-                                        vec![url.as_str()],
-                                        |m| {  if let Some(text) = maybe_text.clone()
-                                               {m.content(&text)}
-                                               else
-                                               {m.content("")} })
-	                {
-                            println!("Error sending message: {:?}", why);
-                        }
-                        else
-                        {
-                            println!("Bot output: Image (url: {}, text: {:?})", url, maybe_text);
-                        }
+                        println!("Bot output: Image (url: {}, text: {:?})", url, maybe_text);
                     }
                 }
-                
             }
-            /*
-            if let Err(why) = msg.channel_id.say(&ctx.http, &out)
-	    {
-                println!("Error sending message: {:?}", why);
-            }
-             */
-
             
         }
+        /*
+        if let Err(why) = msg.channel_id.say(&ctx.http, &out)
+	{
+        println!("Error sending message: {:?}", why);
+    }
+         */
+
+        
     }
 
+}
+
+
+impl EventHandler for Handler
+{
+    fn message(&self, ctx: Context, msg: Message)
+    {
+        process_message(ctx, msg)
+    }
+
+    fn message_update(
+    &self,
+    ctx: Context,
+    _old_if_available: Option<Message>,
+    new: Option<Message>,
+    event: MessageUpdateEvent
+    )
+    {
+        println!("MESSAGE UPDATE: {:?}", event);
+        if let Some(msg) = new
+        {
+            process_message(ctx, msg);
+        }
+    }
+    
     fn ready(&self, _: Context, ready: Ready)
     {
         println!("{} is connected!", ready.user.name);
@@ -163,6 +186,35 @@ fn parse(text: String,
 
     match first_word
     {
+        "onebi" =>
+        {
+            match rand::random::<u32>() % 2 +1
+            {
+                0 => Ok(BotOutput::Text(format!("<@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> <@!243288980039270402> "))),
+                
+                1 => Ok(BotOutput::Image
+                        {
+                            url: String::from("assets/tehc.png"),
+                            maybe_text: None
+                        }),
+                _ => Ok(BotOutput::Image
+                        {
+                            url: String::from("assets/dorian.png"),
+                            maybe_text: None
+                        }),
+                
+            }
+            
+        },
+        "aria" =>
+        {
+            Ok(BotOutput::Image
+               {
+                   url: String::from("assets/cheems.jpg"),
+                   maybe_text: None
+               })
+            
+        },
         "re" =>
         {
             let name = text.split_whitespace().nth(1).unwrap_or("__last_entry");
@@ -192,6 +244,13 @@ fn parse(text: String,
             Ok(BotOutput::Image{
                 url: String::from("assets/haha_nelson.jpg"),
                 maybe_text: Some(format!("Haha!"))
+            })
+        },
+        "emig" =>
+        {
+            Ok(BotOutput::Image{
+                url: String::from("assets/emig.png"),
+                maybe_text: None
             })
         },
         "list" =>

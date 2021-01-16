@@ -87,6 +87,7 @@ Modifier: i64 =
     
 }
 
+Shaan = {"shaan"}
 
 pub Cmd: Command =
 {
@@ -103,15 +104,19 @@ pub Cmd: Command =
     
     Help => Command::Help,
     "say" + <Str> => Command::Say(<>),
-    Brigandine => Command::Brigandine{explode_tresh: 10},
-    Brigandine <tresh: Expr> => Command::Brigandine{explode_tresh: tresh},
+    Brigandine <score: Expr> <tresh: Expr?> =>
+        Command::Brigandine {
+            score: score,
+            explode_tresh: tresh.unwrap_or(10),
+        },
     Expr => Command::Say(format!("{}", <>)),
     <com: Str> CommentSep <cmd :Cmd> =>
         Command::CommentedCmd(String::from(com), Box::new(cmd)),
     <cmp: Comp> => Command::Say(
         if cmp.3 {format!("{} pour {}: Réussite de {}", cmp.0, cmp.1, cmp.2.abs())}
-        else {format!("{} pour {}: Échec de {}", cmp.0, cmp.1, cmp.2.abs())})
-
+        else {format!("{} pour {}: Échec de {}", cmp.0, cmp.1, cmp.2.abs())}),
+    Shaan => Command::Shaan,
+        
 }
 
 

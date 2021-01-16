@@ -15,15 +15,26 @@ pub enum Command
     Say(String),
     Brigandine
     {
+        score: i64,
         explode_tresh: i64,
     },
     CmdList(Vec<Self>),
     CommentedCmd(String, Box<Self>),
+    Shaan
 }
 
 pub fn dice(n_faces: i64) -> i64
 {
     (rand::random::<u64>() % (n_faces as u64) + 1) as i64
+}
+
+pub fn d100_from_d10(tenth_dice: i64, unit_dice: i64) -> i64
+{
+    match (tenth_dice % 10)*10 + (unit_dice % 10)
+    {
+        0 => 100,
+        other => other
+    }
 }
 
 fn explode<F>(n_faces: i64,
@@ -316,7 +327,7 @@ Exemples:
             {
                 s.clone()
             },
-            Self::Brigandine{explode_tresh} =>
+            Self::Brigandine{score, explode_tresh} =>
             {
                 let mut units = vec![];
                 match explode(10, |n| n >= explode_tresh, 0)
@@ -333,8 +344,12 @@ Exemples:
                 
                 let unit_dice = units[0];
                 let tenth_dice = dice(10);
-                let d100 = (tenth_dice % 10)*10 + (unit_dice % 10);
-                let inverse = (unit_dice % 10)*10 + (tenth_dice % 10);
+                let d100 = d100_from_d10(tenth_dice, unit_dice);
+                let inverse = d100_from_d10(unit_dice, tenth_dice);
+
+                let is_success = d100 <= score;
+                let degrees = (d100/10 - score/10).abs();
+                
                 println!("inverse: {}", inverse);
                 let hit_location = match inverse
                 {
@@ -349,12 +364,22 @@ Exemples:
                     89 => "Pied gauche",
                     90..=99 => "Jambe droite",
                     100 => "Pied droit",
-                    _ => unreachable!()
+                    err => {
+                        println!("Impossible location for br: {}", err);
+                        unreachable!()
+                    }
                 };
                 
 
                 let damages: i64 = units.iter().sum();
-                
+                let result_m = if is_success
+                {
+                    format!("Réussite de {} degrés", degrees)
+                }
+                else
+                {
+                    format!("Échec de {} degrés", degrees)
+                };
                 let throw_m = units[1..].iter()
                     .fold(format!("{}", units[0]), |s, n| format!("{}+{}", s, n));
                 let explode_m = if units.len() == 1
@@ -363,15 +388,15 @@ Exemples:
                 {
                     if dice(100) == 1
                     {
-                        format!("(explosion: {}) Macron Explosion!", throw_m)
+                        format!("\n(explosion: {}) Macron Explosion!", throw_m)
                     }
                     else
                     {
-                        format!("(explosion: {})", throw_m)
+                        format!("\n(explosion: {})", throw_m)
                     }
                 };
                 let location_m = format!("localisation: {}", hit_location);
-                format!("test: {} dégâts: {}  {}\n{}", d100, damages, explode_m, location_m)
+                format!("test: {} pour {}\n{}\nDégâts: {} {}{}", d100, score, result_m, damages, location_m, explode_m)
                 
                 
             },
@@ -386,6 +411,10 @@ Exemples:
             Self::CommentedCmd(com, cmd) =>
             {
                 format!("##{}\n{}", com, (*cmd).execute())
+            },
+            Self::Shaan =>
+            {
+                format!("Corp: {}   Esprit: {}   Âme: {}", dice(10), dice(10), dice(10))
             }
         }
     }
