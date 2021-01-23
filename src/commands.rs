@@ -8,7 +8,7 @@ pub enum Command
     },
     Pouet,
     Coupable,
-    Shadowrun(i64, Option<i64>),
+    Shadowrun(i64, Option<i64>, bool),
     Degenesis(i64, Option<i64>),
     Trudvang(i64, i64, i64),
     Help,
@@ -20,7 +20,7 @@ pub enum Command
     },
     CmdList(Vec<Self>),
     CommentedCmd(String, Box<Self>),
-    Shaan
+    Shaan,
 }
 
 pub fn dice(n_faces: i64) -> i64
@@ -194,17 +194,33 @@ Exemples:
             {
                 format!("Jovial.")
             },
-            Self::Shadowrun(n, maybe_goal) =>
+            Self::Shadowrun(n, maybe_goal, explode) =>
             {
                 let mut dies = (0..n).map(|_| dice(6)).collect::<Vec<_>>();
                 dies.sort();
 
-                let n_success = dies.iter().filter(|&&a| a >= 5).count() as i64;
-                let n_ones =  dies.iter().filter(|&&a| a == 1).count() as i64;
+                let mut n_success = dies.iter().filter(|&&a| a >= 5).count() as i64;
+                let mut n_ones =  dies.iter().filter(|&&a| a == 1).count() as i64;
+                let mut all_throws = vec![dies.clone()];
+                let mut n_sixs = dies.iter().filter(|&&a| a == 6).count() as i64;
+                while explode && n_sixs != 0
+                {
+                    let mut dies = (0..n_sixs).map(|_| dice(6)).collect::<Vec<_>>();
+                    dies.sort();
+                    n_sixs = dies.iter().filter(|&&a| a == 6).count() as i64;
+                    n_success += dies.iter().filter(|&&a| a >= 5).count() as i64;
+                    n_ones +=  dies.iter().filter(|&&a| a == 1).count() as i64;
+                    all_throws.push(dies);
+                }
 
-                let throw_s = dies.iter()
-                    .fold(String::new(), |s, n| format!("{} {}", s, n));
-
+                
+                let throw_s = all_throws.into_iter()
+                    .fold(String::new(), |s, dies|
+                          {
+                              let m = dies.iter().fold(String::new(), |s, n| format!("{} {}", s, n));
+                              format!("{} [{}]", s, m)
+                          });
+                
                 let complication_m = if n_ones > n_success
                 {format!("Complication - ")}
                 else
@@ -238,7 +254,7 @@ Exemples:
 
                 };
 
-                format!("[{}]\n{}{}", throw_s, complication_m, msg)
+                format!("{}\n{}{}", throw_s, complication_m, msg)
                 
             },
             Self::Degenesis(n, maybe_goal) =>

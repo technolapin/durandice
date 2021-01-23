@@ -61,6 +61,7 @@ RollWord = {"roll", "d"};
 Warhammer = {"warhammer", "wh"};
 Coupable = "coupable";
 Shadowrun = {"shadowrun", "sr"};
+ShadowrunExplode = {"srboom", "srexplode", "sre", "srexpl"};
 Degenesis = {"dege", "dg", "degenesis"};
 Trudvang = {"trudvang", "trud", "trv"};
 TrudvangJO = {"jo"};
@@ -93,8 +94,9 @@ pub Cmd: Command =
 {
     Warhammer <score: Expr> => Command::Warhammer{score: score},
     Coupable => Command::Coupable,
-    Shadowrun <n: Expr> <goal: Expr> => Command::Shadowrun(n, Some(goal)),
-    Shadowrun <n: Expr>  => Command::Shadowrun(n, None),
+    Shadowrun <n: Expr> <goal: Expr?> => Command::Shadowrun(n, goal, false),
+    ShadowrunExplode <n: Expr> <goal: Expr?> => Command::Shadowrun(n, goal, true),
+//    Shadowrun <n: Expr>  => Command::Shadowrun(n, None),
     
     Degenesis <n: Expr> <goal: Expr> => Command::Degenesis(n, Some(goal)),
     Degenesis <n: Expr>  => Command::Degenesis(n, None),
