@@ -63,12 +63,12 @@ fn process_message(ctx: Context, msg: Message)
             }
             else
             {
-                msg.author.name
+                msg.author.name.clone()
             }
         }
         else
         {
-            msg.author.name
+            msg.author.name.clone()
         };
         
         let conn = Connection::open("database.db").unwrap();
@@ -99,7 +99,7 @@ fn process_message(ctx: Context, msg: Message)
                 },
                 BotOutput::Text(content) =>
                 {
-                    if let Err(why) = msg.channel_id.say(&ctx.http, &content)
+                    if let Err(why) = msg.reply(ctx, &content)
 	            {
                         println!("Error sending message: {:?}", why);
                     }
@@ -346,7 +346,7 @@ fn parse(text: String,
                 _ =>
                 {
                     let result = Error::convert_result(parser::CmdListParser::new().parse(&text))?.execute();
-                    Ok(BotOutput::Text(format!("```Markdown\n# {}\n{}\n```", username, result)))
+                    Ok(BotOutput::Text(format!("```Markdown\n{}\n```", result)))
 
                 }
             }

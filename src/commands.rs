@@ -419,6 +419,7 @@ Exemples:
 
             Self::CmdList(commands) =>
             {
+                
                commands.into_iter()
                     .fold(format!(""),
                           |s, cmd| format!("{}===================================\n{}\n", s, cmd.execute())
