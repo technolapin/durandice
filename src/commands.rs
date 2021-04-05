@@ -410,7 +410,6 @@ Exemples:
                     {
                         format!("\n(explosion: {})", throw_m)
                     }
-                };
                 let location_m = format!("localisation: {}", hit_location);
                 format!("test: {} pour {}\n{}\nDégâts: {} {}{}", d100, score, result_m, damages, location_m, explode_m)
                 
@@ -419,10 +418,21 @@ Exemples:
 
             Self::CmdList(commands) =>
             {
-                
+               let mut first = true;
                commands.into_iter()
                     .fold(format!(""),
-                          |s, cmd| format!("{}===================================\n{}\n", s, cmd.execute())
+                          |s, cmd|
+                          {
+                              if first
+                              {
+                                  first = false;
+                                  format!("{}\n", cmd.execute())
+                              }
+                              else
+                              {
+                                  format!("{}===================================\n{}\n", s, cmd.execute())
+                              }
+                          }
                     )
             },
             Self::CommentedCmd(com, cmd) =>
