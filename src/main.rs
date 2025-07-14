@@ -5,7 +5,6 @@ use serenity::{
     prelude::*,
 };
 use rusqlite::{Connection, Result};
-use rusqlite::NO_PARAMS;
 use chrono::Utc;
 use std::convert::From;
 
@@ -63,12 +62,12 @@ fn process_message(ctx: Context, msg: Message)
             }
             else
             {
-                msg.author.name
+                msg.author.name.clone()
             }
         }
         else
         {
-            msg.author.name
+            msg.author.name.clone()
         };
         
         let conn = Connection::open("database.db").unwrap();
@@ -85,9 +84,13 @@ fn process_message(ctx: Context, msg: Message)
             Err(err) =>
             {
                 let content = format!("Error: {:?}", err);
-                if let Err(why) = msg.channel_id.say(&ctx.http, &content)
-	        {
-                    println!("Error sending error message {:?} ({:?})", content, why);
+                println!("Error: {:?}", err);
+                if false
+                {
+                    if let Err(why) = msg.reply(&ctx.http, &content)
+	            {
+                        println!("Error sending error message {:?} ({:?})", content, why);
+                    }
                 }
 
             },
@@ -99,7 +102,7 @@ fn process_message(ctx: Context, msg: Message)
                 },
                 BotOutput::Text(content) =>
                 {
-                    if let Err(why) = msg.channel_id.say(&ctx.http, &content)
+                    if let Err(why) = msg.reply(&ctx.http, &content)
 	            {
                         println!("Error sending message: {:?}", why);
                     }
@@ -338,15 +341,15 @@ fn parse(text: String,
                         {
                             Ok(result) =>
                             {
-                                format!("```Markdown\n# {}\n{}\n```", username, result)
+                                format!("```Markdown\n{}\n```", result)
                             },
-                            Err(err) => format!("```Markdown\n# {}\n{:?}\n```", username, err)
+                            Err(err) => format!("```Markdown\n{:?}\n```", err)
                         }))
                 },
                 _ =>
                 {
                     let result = Error::convert_result(parser::CmdListParser::new().parse(&text))?.execute();
-                    Ok(BotOutput::Text(format!("```Markdown\n# {}\n{}\n```", username, result)))
+                    Ok(BotOutput::Text(format!("```Markdown\n{}\n```", result)))
 
                 }
             }
@@ -420,7 +423,7 @@ fn main() -> Result<(), Error>
              command text not null,
              date integer
              )",
-            NO_PARAMS,
+            (),
         ).unwrap();
         
 //        data.insert::<Database>(conn.clone());

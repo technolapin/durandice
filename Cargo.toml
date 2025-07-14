@@ -13,10 +13,11 @@ lalrpop = "0.17.2"
 lalrpop-util = "0.18.1"
 regex = "1"
 serenity = "0.8.6"
-rand = "*"
+rand = {version = "0.9.1", feature = ["thread_rng"]}
 rlisp = {path = "rlisp"}
 tokio="*"
-rusqlite="*"
+rusqlite="0.37.0"
+pkg-config="*"
 serde="*"
 serde_json="*"
 chrono="*"
