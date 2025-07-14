@@ -419,10 +419,21 @@ Exemples:
 
             Self::CmdList(commands) =>
             {
-               commands.into_iter()
-                    .fold(format!(""),
-                          |s, cmd| format!("{}===================================\n{}\n", s, cmd.execute())
-                    )
+                let mut out = String::new();
+                if commands.len() > 0
+                {
+                    let mut start = true;
+                    for cmd in commands.into_iter()
+                    {
+                        if !start
+                        {
+                            out += "===================================\n";
+                        }
+                            start = false; 
+                        out = format!("{out}{}\n", cmd.execute());
+                    }
+                }
+                out
             },
             Self::CommentedCmd(com, cmd) =>
             {
@@ -433,5 +444,5 @@ Exemples:
                 format!("Corp: {}   Esprit: {}   Âme: {}", dice(10), dice(10), dice(10))
             }
         }
+        }
     }
-}
